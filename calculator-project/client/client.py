@@ -1,36 +1,38 @@
 import socket
+import sys
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-print("Tentative de connexion au serveur...")
-sock.connect(('10.1.1.2', 8889))
+def send_message(message, host='localhost', port=8889):
+    try:
+        # Create a socket object
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# Envoyer un message de bienvenue
-sock.send('Hello'.encode())
+        # Connect to the server
+        client_socket.connect((host, port))
 
-data = sock.recv(1024)
-print(f"Message reçu du serveur : {data.decode()}")
+        # Encode the message and get its length
+        message_encoded = message.encode('utf-8')
+        message_length = len(message_encoded)
 
-# Récupérer une string saisie par l'utilisateur
-msg = input('Calcul à envoyer (ex: "3 + 3"): ')
+        # Send the length of the message as a 4-byte header
+        client_socket.sendall(message_length.to_bytes(4, byteorder='big'))
 
-# Encoder le message explicitement en UTF-8 pour récupérer un tableau de bytes
-encoded_msg = msg.encode('utf-8')
+        # Send the actual message
+        client_socket.sendall(message_encoded)
 
-# Calculer sa taille, en nombre d'octets
-msg_len = len(encoded_msg)
+        # Receive the response from the server
+        response = client_socket.recv(1024)
+        print(f"Réponse du serveur: {response.decode('utf-8')}")
 
-# Encoder ce nombre d'octets sur une taille fixe de 4 octets
-header = msg_len.to_bytes(4, byteorder='big')
+    except Exception as e:
+        print(f"Une erreur s'est produite lors de la communication avec le serveur: {e}")
+    finally:
+        # Close the socket
+        client_socket.close()
 
-# Concaténer ce header avec le message, avant d'envoyer sur le réseau
-payload = header + encoded_msg
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print("Usage: python client.py <message>")
+        sys.exit(1)
 
-# Envoyer le payload sur le réseau
-print(f"Envoi du message : {payload}")
-sock.send(payload)
-
-# Recevoir le résultat du serveur
-result = sock.recv(1024)
-print(f"Résultat reçu du serveur : {result.decode()}")
-
-sock.close()
+    message = sys.argv[1]
+    send_message(message)
