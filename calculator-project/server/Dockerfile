@@ -9,3 +9,4 @@ ENV CALC_PORT=8889
 EXPOSE 8889
 
 ENTRYPOINT ["python", "server.py"]
+
