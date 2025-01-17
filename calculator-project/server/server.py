@@ -29,11 +29,13 @@ except Exception as e:
 while True:
     try:
         header = client.recv(4)
+    
         if not header:
             print("Connexion fermée par le client.")
             break
 
-        msg_len = int.from_bytes(header[0:4], byteorder='big')
+        print(f"Header reçu : {header}")
+        msg_len = int.from_bytes(header, byteorder='big')
         print(f"Lecture des {msg_len} prochains octets")
 
         chunks = []
@@ -50,6 +52,7 @@ while True:
 
         try:
             res = eval(message_received)
+            print(f"res is {res}")
             client.send(str(res).encode())
         except Exception as e:
             client.send(f"Erreur: {str(e)}".encode())
@@ -59,4 +62,3 @@ while True:
 
 client.close()
 sock.close()
-
